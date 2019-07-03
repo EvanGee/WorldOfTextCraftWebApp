@@ -1,0 +1,48 @@
+.textFields {
+    color: black;
+    background-color: black;
+}
+
+.textbox{
+    margin-top: 2px;
+    padding: 5px;
+    height: 50em;
+    border-style: solid; 
+    border-bottom: 0px; 
+    width: 75%;
+    margin-Left: 12.5%;
+    overflow-Y: auto;
+}
+
+.input{
+    padding: 5px;
+    border-style: solid; 
+    width: 75%;
+    margin-Left: 12.5%;
+    overflow-Y: auto;
+    margin-bottom: 2px;
+}
+
+.labels {
+    margin: 30px;
+}
+
+.containerContainer{
+    position: absolute;
+
+}
+.container{
+    position: relative;
+    text-align: right;
+
+}
+
+.playerId{
+    display: inline-block;
+    vertical-align:middle;   
+}
+
+.buttons {
+    vertical-align:middle;   
+    display: inline-block;
+}
