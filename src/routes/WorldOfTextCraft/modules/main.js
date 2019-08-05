@@ -1,7 +1,9 @@
 import io from 'socket.io-client';
 import Web3 from 'web3';
 import { newPlayer, getPlayerByAddress } from "../../../BlockChain/PlayerRegistry"
-import {buyItem} from "../../../BlockChain/GameInteractions"
+import {buyItem,addItem, listAllOwnedItems} from "../../../BlockChain/GameInteractions"
+import images from "./images"
+import hal from "../../../Images/HAL.png"
 
 // ------------------------------------
 // Constants
@@ -15,8 +17,8 @@ const NEW_ID = "NEW_ID"
 const OPEN_DIALOG = "OPEN_DIALOG"
 const SET_PLAYER_VALUE = "SET_PLAYER_VALUE"
 const SET_PLAYER_ADDRESS = "SET_PLAYER_ADDRESS"
-
-
+const MSG_SERVER = "MSG_SERVER"
+const CURRENT_OWNED = "CURRENT_OWNED"
 // ------------------------------------
 // Actions
 // ------------------------------------
@@ -35,17 +37,26 @@ export const set_player_address = () => {
 export const open_dialog = (value) => ({ type: OPEN_DIALOG, value })
 export const ready_input = (value) => ({ type: INPUT, value })
 export const set_player_value = (id, value) => ({ type: SET_PLAYER_VALUE, id, value })
-const message_recv = (value) => ({ type: NEW_MESSAGE, value })
+const message_recv = (text, image) => ({ type: NEW_MESSAGE, value:{text,image} })
 const connected = (value) => ({ type: CONNECT, value })
 const host = (value) => ({ type: HOST, value })
 const newId = (value) => ({ type: NEW_ID, value })
+const msg_server = (value) => ({type:MSG_SERVER, value})
 
+export const get_all_owned_items = () => {
+  return (dispatch, getState) => {
+    listAllOwnedItems().then((res)=>{
+      dispatch({type:CURRENT_OWNED, value:res})
+    })
+  }
+  
+}
 
 export const create_character = () => {
   return (dispatch, getState) => {
 
     if (web3.eth.defaultAccount === undefined) {
-      dispatch(message_recv("please sign into metamask to create a character"))
+      dispatch(message_recv("please sign into metamask to create a character", hal))
       return
     }
     const state = getState().WorldOfTextCraft
@@ -58,15 +69,16 @@ export const create_character = () => {
       state.Charisma])
 
       .then((res) => {
-        dispatch(message_recv("new character created, it may take a while before your character is mined, refresh in 15 seconds or so to see it"))
+        dispatch(message_recv("new character created, it may take a while before your character is mined, refresh in 15 seconds or so to see it", hal))
       
       })
       .catch((err) => {
-        dispatch(message_recv("could not create character"))
+        dispatch(message_recv("could not create character", hal))
       })
 
   }
 }
+
 
 export const send_message = (e) => {
 
@@ -75,7 +87,7 @@ export const send_message = (e) => {
 
       let state = getState().WorldOfTextCraft
       if (state.connected === false) {
-        dispatch(message_recv("...Connecting"))
+        dispatch(message_recv("...Connecting", hal))
         dispatch(connect_to_host("ws://localhost:3001"));
         return
       }
@@ -95,7 +107,7 @@ export const connect_to_host = (url) => {
       if (web3.eth.defaultAccount !== undefined)
         dispatch(newId(web3.eth.defaultAccount))
       else {
-        dispatch(message_recv("please sign into metamask before continuing"))
+        dispatch(message_recv("please sign into metamask before continuing", hal))
         return;
       }
     }
@@ -104,26 +116,38 @@ export const connect_to_host = (url) => {
     socket.on('connect', () => {
       dispatch(host(socket))
       dispatch(connected(true))
-      dispatch(message_recv("Connected type anything to continue"))
+      dispatch(message_recv("Connected type anything to continue", hal))
     });
 
+//id:code:id:text
     socket.on('message', (data) => {
+      //console.log("raw message:", data)
       const msgList = data.split(":")
-      if (msgList[1] === "PURCHASE"){
-        console.log("reserve the name PURCHASE")
+
+      if (msgList[1] === "buy"){
         buyItem(msgList[2], msgList[3])
-        .then(()=>{
-          dispatch(message_recv("purchased "  + msgList[2] + " for " + msgList[3]))
+        .then((addr)=>{
+          dispatch(message_recv("purchased "  + msgList[2] + " for " + msgList[3], hal))
+
+          addItem(addr).then((res)=>{
+            dispatch(message_recv("added Item "  + msgList[2] + " To inventory", hal))
+          })
+          .catch(()=>{
+            dispatch(message_recv("couldn't add item to inventory", hal))
+          })
+
         })
         .catch(()=>{
-          dispatch(message_recv("couldn't buy item"))
+          dispatch(message_recv("couldn't buy item", hal))
         })
+      }
 
-
+      else if (msgList[1] === "explore" || msgList[1] === "examine") {
+        dispatch(message_recv(msgList.slice(3).join(":"), images[msgList[2]]))
       }
 
       else
-        dispatch(message_recv(msgList.slice(1).join(":")))
+        dispatch(message_recv(msgList.slice(1).join(":"), hal))
     });
 
     socket.on('disconnect', (data) => {
@@ -135,15 +159,26 @@ export const connect_to_host = (url) => {
 }
 
 
-
+      
+        
 // ------------------------------------
 // Action Handlers
 // ------------------------------------
 const ACTION_HANDLERS = {
-  [NEW_MESSAGE]: (state, action) => ({
+  [CURRENT_OWNED] : (state, action) => {
+    return {
+      ...state, items: action.value
+    }
+  },
+  [MSG_SERVER]: (state, action) => {
+    state.host.send(`${state.id}:${value}`)
+  },
+  [NEW_MESSAGE]: (state, action) => {
+    //console.log(action.value)
+    return {
     ...state,
     messages: [...state.messages, action.value]
-  }),
+  }},
   [CONNECT]: (state, action) => ({
     ...state,
     connected: action.value
@@ -204,7 +239,7 @@ const ACTION_HANDLERS = {
 // ------------------------------------
 const initialState = {
   id: "",
-  messages: ["Hello! this is a basic multiplayer text based adventure, it is a proof of concept used to show off how we can unify games and blockchain tech! You need a Metamask browser extension and account, once you have that, type anything to connect"],
+  messages: [{image:hal, text:"Hello! this is a basic multiplayer text based adventure, it is a proof of concept used to show off how we can unify games and blockchain tech! You need a Metamask browser extension and account, once you have that, type anything to connect, when connected type 'h' to see a help menu of commands!"}],
   connected: false,
   host: "",
   input: "",
@@ -215,7 +250,8 @@ const initialState = {
   Intelligence: '10',
   Wisdom: '10',
   Charisma: '10',
-  playerAddress: "Create a character, or sign in if you already have one!"
+  playerAddress: "Create a character, or sign in if you already have one!",
+  items: []
 }
 export default function counterReducer(state = initialState, action) {
   const handler = ACTION_HANDLERS[action.type]

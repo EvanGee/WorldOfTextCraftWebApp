@@ -65,7 +65,7 @@ class AppBarExampleComposition extends Component {
             <div>
                 <AppBar
                     title={<Link to="/" style={{ "color": "white", "textDecoration": "none" }}>{this.props.title}</Link>}
-                    iconElementLeft={<HamburgerNavs items={this.props.menu} />}
+                    //iconElementLeft={<HamburgerNavs items={this.props.menu} />}
 
                 >
                        <div className="ethId">{web3.eth.defaultAccount == undefined ? <div> Sign in with <a href="https://metamask.io/">metamask</a></div> : <div><Avatar>Id</Avatar> {web3.eth.defaultAccount}</div> }</div>

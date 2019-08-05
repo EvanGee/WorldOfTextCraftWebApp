@@ -1,34 +1,50 @@
-import Contract from "./Contracts/PlayerRegistry.js";
+import Contract from "./Contracts/PlayerRegistry";
+const contract = Contract
 
-
-const contractAddr = '0x3f325aBb1da2f6328ae9Fe1bd66e5B190D2d9103'
-const cont = web3.eth.contract(Contract.abi, contractAddr)
-const instance = cont.at(contractAddr);
+import {getPlayerRegistry} from "./GameRegistry.js"
+import gasLimit from "./gasLimit"
 
 export function newPlayer(statArray) {
+    
     return new Promise((resolve, reject) => {
-        instance.newPlayer(statArray, {
-            from: web3.eth.defaultAccount,
-            gas: 900000
-        }, (err, res) => {
-            if (err) reject(err)
-            resolve(res)
+
+        getPlayerRegistry()
+        .then((registry)=>{
+            console.log("player registry addr:" ,registry)
+            const contractAddr = registry
+            const cont = web3.eth.contract(contract.abi, contractAddr)
+            const instance = cont.at(contractAddr);
+
+            instance.newPlayer(statArray, {
+                from: web3.eth.defaultAccount,
+                gas: gasLimit
+            }, (err, res) => {
+                if (err) reject(err)
+                resolve(res)
+            })
+            
         })
+        .catch(console.error)
 
     })
 }
 
+
 export function getPlayerByAddress(address) {
     return new Promise((resolve, reject)=>{
-        console.log(instance)
-        instance.getPlayerByAddress(web3.eth.defaultAccount, {from: web3.eth.defaultAccount}, (err, res) => {
-            if (err) reject(err)
-            resolve(res)
-        })
-    })   
-}
+        getPlayerRegistry()
+        .then((registry)=>{
+            console.log("player registry addr:" ,registry)
+            const contractAddr = registry
+            const cont = web3.eth.contract(contract.abi, contractAddr)
+            const instance = cont.at(contractAddr);
+            instance.getPlayerByAddress(web3.eth.defaultAccount, {from: web3.eth.defaultAccount}, (err, res) => {
+                if (err) reject(err)
+                resolve(res)
+            })
 
-export default {
-    newPlayer,
-    getPlayerByAddress
+        })
+        .catch(console.error)
+
+    })
 }

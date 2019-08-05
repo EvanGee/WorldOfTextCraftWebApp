@@ -8,8 +8,6 @@ import { darkBaseTheme, getMuiTheme, withStyles } from 'material-ui/styles';
 import Dialog from "material-ui/Dialog"
 import Footer from "../../../components/Footer"
 import CreateChar from "./CreateChar"
-import { create } from 'domain';
-
 
 const scrollDown = (div) => {
   if (div === null)
@@ -33,10 +31,9 @@ class Message extends React.Component {
 
 }
 
-export const Page = ({ set_player_address, playerAddress, connect_to_host, messages, connected, ready_input, send_message, input, create_character, open_dialog, openDialogBool, set_player_value, playerValues }) => {
+export const Page = ({ items, get_all_owned_items, set_player_address, playerAddress, connect_to_host, messages, connected, ready_input, send_message, input, create_character, open_dialog, openDialogBool, set_player_value, playerValues }) => {
 
   const style = getMuiTheme()
-
   if(playerAddress === "Create a character, or sign in if you already have one!"){
     set_player_address()
   }
@@ -45,7 +42,7 @@ export const Page = ({ set_player_address, playerAddress, connect_to_host, messa
     <div style={{ margin: '0 auto' }} style={{ background: style.palette.primary2Color }} >
 
       <div className="buttons">
-        <Button style={{margin:10}}><a href="https://metamask.io/">Meta</a> </Button>
+        <Button style={{margin:10}} onClick={get_all_owned_items}><div>Get</div></Button>
         <Button style={{margin:10}} onClick={() => { open_dialog(true) }}><div>Create</div></Button>        
       </div>
     
@@ -55,9 +52,10 @@ export const Page = ({ set_player_address, playerAddress, connect_to_host, messa
         <CreateChar {...{set_player_value, open_dialog, create_character, playerValues}} />
       </Dialog>
 
-      <div id="textBox" className={"textbox"} style={{ background: style.palette.accent2Color }} >
+      <div>Owned Items: {items.map((d)=>d[0])}</div>
+      <div id="textBox" className={"textbox"} style={{ background: style.palette.primary3Color }} >
         {messages.map((d, i) => {
-          return <Message key={i} item={<div><Avatar />{d}</div>}> </Message >
+          return <Message key={i} item={<div><Avatar src={d.image} />{d.text}</div>}> </Message >
         })}
 
       </div>
@@ -72,6 +70,7 @@ export const Page = ({ set_player_address, playerAddress, connect_to_host, messa
           value={input}
           onKeyDown={(e) => send_message(e)}
           onChange={(e) => ready_input(e.target.value)}
+          autoComplete='off'
         />
       </div>
       <Footer />

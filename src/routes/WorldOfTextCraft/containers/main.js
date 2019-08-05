@@ -1,6 +1,8 @@
 import { connect } from 'react-redux'
-import { connect_to_host, ready_input, send_message, create_character, open_dialog, set_player_value, set_player_address } from '../modules/main'
+import { connect_to_host, ready_input, send_message, create_character, open_dialog, set_player_value, set_player_address, get_all_owned_items } from '../modules/main'
 import Page from '../components/main'
+
+
 
 const mapDispatchToProps = {
     ready_input,
@@ -8,7 +10,8 @@ const mapDispatchToProps = {
     create_character,
     open_dialog,
     set_player_value,
-    set_player_address
+    set_player_address,
+    get_all_owned_items
 }
 
 const mapStateToProps = (state) => ({
@@ -24,7 +27,8 @@ const mapStateToProps = (state) => ({
         "Wisdom": state.WorldOfTextCraft.Wisdom,
         "Charisma": state.WorldOfTextCraft.Charisma,
     },
-    playerAddress: state.WorldOfTextCraft.playerAddress
+    playerAddress: state.WorldOfTextCraft.playerAddress,
+    items: state.WorldOfTextCraft.items
 })
 
 export default connect(mapStateToProps, mapDispatchToProps)(Page)
